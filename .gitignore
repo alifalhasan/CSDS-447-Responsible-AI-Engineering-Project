@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ignore VirtualEnv
+447_env/*
+
+!447_env/requirements.txt
