@@ -210,5 +210,6 @@ __marimo__/
 447_env/*
 
 model_1_demo/demo_results/*
+m1_SD_result/generated_images/*
 
 !447_env/requirements.txt
