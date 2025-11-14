@@ -3,7 +3,7 @@
 Image Generation Module for Negative Role Fairness Analysis
 
 This module handles text-to-image generation using various models including
-Stable Diffusion and DALL-E for bias analysis in negative role depictions.
+Stable Diffusion, SDXL, FLUX, and DALL-E for bias analysis in negative role depictions.
 """
 
 import os
@@ -19,6 +19,7 @@ from diffusers import (
     StableDiffusionPipeline, 
     StableDiffusionXLPipeline,
     StableDiffusionXLImg2ImgPipeline,
+    FluxPipeline,
     DPMSolverMultistepScheduler,
     EulerDiscreteScheduler
 )
@@ -48,6 +49,7 @@ class ImageGenerator:
         self.pipeline = None
         self.refiner = None
         self.is_sdxl = "xl" in model_name.lower()
+        self.is_flux = "flux" in model_name.lower()
         self._load_model()
     
     def _get_device(self, device: str) -> str:
@@ -64,7 +66,9 @@ class ImageGenerator:
     def _load_model(self):
         """Load the specified model."""
         try:
-            if "stable-diffusion" in self.model_name.lower():
+            if self.is_flux:
+                self._load_flux()
+            elif "stable-diffusion" in self.model_name.lower():
                 self._load_stable_diffusion()
             elif "dall-e" in self.model_name.lower():
                 self._load_dalle()
@@ -74,6 +78,33 @@ class ImageGenerator:
         except Exception as e:
             logger.error(f"Failed to load model {self.model_name}: {e}")
             raise
+    
+    def _load_flux(self):
+        """Load FLUX.1 model."""
+        logger.info(f"Loading FLUX model: {self.model_name}")
+        
+        # Determine appropriate dtype
+        if self.device == "cuda":
+            dtype = torch.bfloat16  # FLUX works best with bfloat16 on CUDA
+        else:
+            dtype = torch.float32
+        
+        # Load FLUX pipeline
+        self.pipeline = FluxPipeline.from_pretrained(
+            self.model_name,
+            torch_dtype=dtype
+        )
+        
+        self.pipeline = self.pipeline.to(self.device)
+        
+        # Enable memory optimizations
+        if hasattr(self.pipeline, 'enable_attention_slicing'):
+            self.pipeline.enable_attention_slicing()
+        
+        if hasattr(self.pipeline, 'enable_vae_slicing'):
+            self.pipeline.enable_vae_slicing()
+        
+        logger.info(f"Successfully loaded FLUX model on {self.device}")
     
     def _load_stable_diffusion(self):
         """Load Stable Diffusion model."""
@@ -194,8 +225,8 @@ class ImageGenerator:
             num_inference_steps: Number of denoising steps
             seed: Random seed for reproducibility
             negative_prompt: Negative prompt to avoid certain features
-            height: Image height (default: 1024 for SDXL, 512 for others)
-            width: Image width (default: 1024 for SDXL, 512 for others)
+            height: Image height (default: 1024 for SDXL/FLUX, 512 for SD)
+            width: Image width (default: 1024 for SDXL/FLUX, 512 for SD)
             
         Returns:
             List of generated PIL Images
@@ -212,21 +243,34 @@ class ImageGenerator:
         
         # Set default dimensions based on model
         if height is None:
-            height = 1024 if self.is_sdxl else 512
+            height = 1024 if (self.is_sdxl or self.is_flux) else 512
         if width is None:
-            width = 1024 if self.is_sdxl else 512
-        
-        # Set default negative prompt for SDXL if not provided
-        if negative_prompt is None and self.is_sdxl:
-            negative_prompt = "blurry, low quality, distorted, deformed, ugly, bad anatomy, bad proportions"
-        
-        # Adjust guidance scale for SDXL (typically uses 5-7)
-        if self.is_sdxl and guidance_scale == 7.5:
-            guidance_scale = 5.0
+            width = 1024 if (self.is_sdxl or self.is_flux) else 512
         
         try:
-            # Generate with base model
-            if self.is_sdxl:
+            if self.is_flux:
+                # FLUX generation
+                with torch.autocast(self.device if self.device != "mps" else "cpu", 
+                                  dtype=torch.bfloat16 if self.device == "cuda" else torch.float32):
+                    images = self.pipeline(
+                        prompt=prompt,
+                        num_images_per_prompt=num_images,
+                        guidance_scale=guidance_scale,
+                        num_inference_steps=num_inference_steps,
+                        height=height,
+                        width=width,
+                        generator=generator
+                    ).images
+            
+            elif self.is_sdxl:
+                # Set default negative prompt for SDXL if not provided
+                if negative_prompt is None:
+                    negative_prompt = "blurry, low quality, distorted, deformed, ugly, bad anatomy, bad proportions"
+                
+                # Adjust guidance scale for SDXL (typically uses 5-7)
+                if guidance_scale == 7.5:
+                    guidance_scale = 5.0
+                
                 # SDXL generation
                 with torch.autocast(self.device if self.device != "mps" else "cpu", 
                                   dtype=torch.float16 if self.device == "cuda" else torch.float32):
@@ -250,8 +294,8 @@ class ImageGenerator:
                             prompt=prompt,
                             negative_prompt=negative_prompt,
                             image=image,
-                            num_inference_steps=num_inference_steps // 2,  # Fewer steps for refiner
-                            strength=0.3,  # Low strength to preserve base image
+                            num_inference_steps=num_inference_steps // 2,
+                            strength=0.3,
                             guidance_scale=guidance_scale,
                             generator=generator
                         ).images[0]
