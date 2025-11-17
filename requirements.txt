@@ -26,6 +26,7 @@ mtcnn
 retina-face
 
 tensorflow
+tf_keras
 keras
 
 pyyaml
