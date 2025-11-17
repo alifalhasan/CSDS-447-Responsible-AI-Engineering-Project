@@ -30,3 +30,7 @@ tf_keras
 keras
 
 pyyaml
+
+sentencepiece
+protobuf
+accelerate
