@@ -2,13 +2,7 @@
 """
 Model 2: FLUX.1-dev Pipeline for Negative Role Fairness Analysis
 
-This script runs the complete pipeline for analyzing bias in FLUX.1-dev
-text-to-image model when generating images of negative social roles.
-
 All results are saved to m2_FLUX_result/ directory.
-
-Usage:
-    python m2_FLUX.py --num-images 3 --device auto
 """
 
 import os
