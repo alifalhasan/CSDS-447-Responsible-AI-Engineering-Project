@@ -2,7 +2,13 @@
 """
 Model 2: FLUX.1-dev Pipeline for Negative Role Fairness Analysis
 
+This script runs the complete pipeline for analyzing bias in FLUX.1-dev
+text-to-image model when generating images of negative social roles.
+
 All results are saved to m2_FLUX_result/ directory.
+
+Usage:
+    python m2_FLUX.py --num-images 3 --device auto
 """
 
 import os
@@ -15,6 +21,7 @@ import time
 from typing import Dict, Any
 import numpy as np
 
+# Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from generation.generate_images import ImageGenerator, load_prompts_from_csv
@@ -22,6 +29,7 @@ from classification.classify_demographics import FairFaceClassifier
 from analysis.compute_metrics import BiasAnalyzer, convert_to_native_types
 from visualization.plot_results import BiasVisualizer
 
+# Set up logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -41,8 +49,9 @@ class FLUXPipeline:
         """
         self.output_dir = Path(output_dir)
         self.device = device
-        self.model_name = "black-forest-labs/FLUX.1-dev"
+        self.model_name = "black-forest-labs/FLUX.1-dev"  # FLUX.1-dev model
 
+        # Create output directories
         self.images_dir = self.output_dir / "generated_images"
         self.annotations_dir = self.output_dir / "annotations"
         self.analysis_dir = self.output_dir / "analysis"
@@ -56,6 +65,7 @@ class FLUXPipeline:
         ]:
             dir_path.mkdir(parents=True, exist_ok=True)
 
+        # Initialize components
         self.image_generator = None
         self.classifier = None
         self.analyzer = BiasAnalyzer()
@@ -78,9 +88,12 @@ class FLUXPipeline:
         """Generate images using FLUX.1-dev."""
         logger.info(f"Initializing FLUX.1-dev image generator")
         self.image_generator = ImageGenerator(
-            model_name=self.model_name, device=self.device, use_refiner=False
+            model_name=self.model_name,
+            device=self.device,
+            use_refiner=False,  # FLUX doesn't use a separate refiner
         )
 
+        # Extract prompts
         prompts = [p["natural_prompt"] for p in prompts_data]
 
         logger.info(
@@ -92,7 +105,7 @@ class FLUXPipeline:
             prompts=prompts,
             output_dir=str(self.images_dir),
             num_images_per_prompt=num_images_per_prompt,
-            seed=42,
+            seed=42,  # For reproducibility
         )
 
         generation_time = time.time() - start_time
@@ -100,6 +113,7 @@ class FLUXPipeline:
 
         logger.info(f"Generated {total_images} images in {generation_time:.2f} seconds")
 
+        # Save generation metadata
         metadata = {
             "model_name": self.model_name,
             "device": self.device,
@@ -111,6 +125,7 @@ class FLUXPipeline:
         }
 
         metadata_path = self.analysis_dir / "generation_metadata.json"
+        # Convert numpy types to native Python types for JSON serialization
         metadata_serializable = convert_to_native_types(metadata)
         with open(metadata_path, "w") as f:
             json.dump(metadata_serializable, f, indent=2)
@@ -123,6 +138,7 @@ class FLUXPipeline:
         logger.info("Initializing demographic classifier")
         self.classifier = FairFaceClassifier(model_path=model_path, device=self.device)
 
+        # Get list of generated images
         image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff"}
         image_paths = []
 
@@ -138,6 +154,7 @@ class FLUXPipeline:
         logger.info(f"Classifying demographics for {len(image_paths)} images")
         start_time = time.time()
 
+        # Classify images
         results = self.classifier.classify_batch(
             image_paths=image_paths,
             output_path=str(self.annotations_dir / "classification_results.json"),
@@ -147,6 +164,7 @@ class FLUXPipeline:
 
         logger.info(f"Classification completed in {classification_time:.2f} seconds")
 
+        # Save classification metadata
         metadata = {
             "model_path": model_path,
             "device": self.device,
@@ -156,6 +174,7 @@ class FLUXPipeline:
         }
 
         metadata_path = self.analysis_dir / "classification_metadata.json"
+        # Convert numpy types to native Python types for JSON serialization
         metadata_serializable = convert_to_native_types(metadata)
         with open(metadata_path, "w") as f:
             json.dump(metadata_serializable, f, indent=2)
@@ -192,6 +211,7 @@ class FLUXPipeline:
 
         # Save analysis results
         analysis_path = self.analysis_dir / "bias_analysis.json"
+        # Convert numpy types to native Python types for JSON serialization
         analysis_serializable = convert_to_native_types(analysis)
         with open(analysis_path, "w") as f:
             json.dump(analysis_serializable, f, indent=2)
@@ -332,6 +352,22 @@ class FLUXPipeline:
 
             # Step 3: Classify demographics
             logger.info("\n[Step 3/6] Classifying demographics...")
+
+            # Clear PyTorch GPU memory before TensorFlow classification
+            if self.device == "cuda":
+                import torch
+
+                torch.cuda.empty_cache()
+                logger.info("Cleared PyTorch GPU cache")
+
+            # Force TensorFlow to use CPU to avoid GPU conflicts
+            import os
+
+            os.environ["CUDA_VISIBLE_DEVICES"] = ""
+            logger.info(
+                "Set classification to use CPU (avoiding TensorFlow/PyTorch GPU conflict)"
+            )
+
             classification_metadata = self.classify_demographics(classifier_model_path)
 
             # Step 4: Analyze bias
