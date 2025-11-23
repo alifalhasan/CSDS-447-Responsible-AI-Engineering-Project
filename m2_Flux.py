@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class FLUXPipeline:
     """Complete pipeline for FLUX.1-dev negative role fairness analysis."""
 
-    def __init__(self, output_dir: str = "m2_FLUX_result", device: str = "auto"):
+    def __init__(self, output_dir: str = "m2_FLUX_fair_result", device: str = "auto"):
         self.output_dir = Path(output_dir)
         self.device = device
         self.model_name = "black-forest-labs/FLUX.1-dev"
@@ -426,8 +426,8 @@ Examples:
     )
     parser.add_argument(
         "--prompts",
-        default="negative_role_prompts_all.csv",
-        help="Path to prompts CSV file (default: negative_role_prompts_all.csv)",
+        default="negative_role_prompts_merged_clean_frontview.csv",
+        help="Path to prompts CSV file (default: negative_role_prompts_merged_clean_frontview.csv)",
     )
     parser.add_argument(
         "--num-images",
@@ -445,8 +445,8 @@ Examples:
     )
     parser.add_argument(
         "--output",
-        default="m2_FLUX_result",
-        help="Output directory for results (default: m2_FLUX_result)",
+        default="m2_FLUX_fair_result",
+        help="Output directory for results (default: m2_FLUX_fair_result)",
     )
 
     args = parser.parse_args()
