@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Model 2: FLUX.1-dev Pipeline for Negative Role Fairness Analysis
-
-All results are saved to m2_FLUX_result/ directory.
-"""
-
 import os
 import sys
 import json
@@ -34,16 +28,9 @@ class FLUXPipeline:
     """Complete pipeline for FLUX.1-dev negative role fairness analysis."""
 
     def __init__(self, output_dir: str = "m2_FLUX_result", device: str = "auto"):
-        """
-        Initialize the pipeline.
-
-        Args:
-            output_dir: Directory to save all results (default: m2_FLUX_result)
-            device: Device to use for computation
-        """
         self.output_dir = Path(output_dir)
         self.device = device
-        self.model_name = "black-forest-labs/FLUX.1-dev"  # FLUX.1-dev model
+        self.model_name = "black-forest-labs/FLUX.1-dev"
 
         # Create output directories
         self.images_dir = self.output_dir / "generated_images"
@@ -84,7 +71,7 @@ class FLUXPipeline:
         self.image_generator = ImageGenerator(
             model_name=self.model_name,
             device=self.device,
-            use_refiner=False,  # FLUX doesn't use a separate refiner
+            use_refiner=False,
         )
 
         # Extract prompts
@@ -99,7 +86,7 @@ class FLUXPipeline:
             prompts=prompts,
             output_dir=str(self.images_dir),
             num_images_per_prompt=num_images_per_prompt,
-            seed=42,  # For reproducibility
+            seed=42,
         )
 
         generation_time = time.time() - start_time
