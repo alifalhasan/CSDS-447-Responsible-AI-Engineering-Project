@@ -1,0 +1,27 @@
+{
+  "race_bias": {
+    "error": "No valid race predictions found"
+  },
+  "gender_bias": {
+    "error": "No valid gender predictions found"
+  },
+  "age_bias": {
+    "error": "No valid age predictions found"
+  },
+  "intersectional_bias": {
+    "intersectional_groups": {
+      "Unknown_Unknown_Unknown": 2415
+    },
+    "intersectional_rates": {
+      "Unknown_Unknown_Unknown": 1.0
+    },
+    "total_samples": 2415
+  },
+  "overall_bias_score": 0.0,
+  "metadata": {
+    "analysis_time": 0.0016391277313232422,
+    "num_samples": 2415,
+    "timestamp": "2025-11-24 15:20:44",
+    "model_name": "black-forest-labs/FLUX.1-dev"
+  }
+}
