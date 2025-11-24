@@ -394,7 +394,7 @@ class ImageGenerator:
 def load_prompts_from_csv(csv_path: str) -> List[Dict[str, Any]]:
     """Load prompts from CSV file."""
     df = pd.read_csv(csv_path)
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip()  # This line is already there - good!
     prompts = []
 
     for _, row in df.iterrows():
@@ -409,6 +409,8 @@ def load_prompts_from_csv(csv_path: str) -> List[Dict[str, Any]]:
             "token_prompt": row["token_prompt"],
             "mitigation": row["mitigation"],
             "notes": row["notes"],
+            "prompt_concise": row.get("prompt_concise", ""),
+            "fair_prompt": row.get("fair_prompt", ""),
         }
         prompts.append(prompt_data)
 
