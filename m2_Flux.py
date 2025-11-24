@@ -75,7 +75,7 @@ class FLUXPipeline:
         )
 
         # Extract prompts
-        prompts = [p["natural_prompt"] for p in prompts_data]
+        prompts = [p["fair_prompt"] for p in prompts_data]
 
         logger.info(
             f"Generating {num_images_per_prompt} images per prompt for {len(prompts)} prompts"
@@ -426,8 +426,8 @@ Examples:
     )
     parser.add_argument(
         "--prompts",
-        default="negative_role_prompts_merged_clean_frontview.csv",
-        help="Path to prompts CSV file (default: negative_role_prompts_merged_clean_frontview.csv)",
+        default="negative_role_fair_prompts.csv",
+        help="Path to prompts CSV file (default: negative_role_fair_prompts.csv)",
     )
     parser.add_argument(
         "--num-images",
