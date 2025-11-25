@@ -9,7 +9,7 @@ import time
 from typing import Dict, Any
 import numpy as np
 
-# CRITICAL: Set TensorFlow to CPU-only BEFORE any imports that might load TensorFlow
+# Set TensorFlow to CPU-only
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Reduce TensorFlow logging
