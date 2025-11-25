@@ -9,6 +9,11 @@ import time
 from typing import Dict, Any
 import numpy as np
 
+# CRITICAL: Set TensorFlow to CPU-only BEFORE any imports that might load TensorFlow
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Reduce TensorFlow logging
+
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
@@ -55,6 +60,9 @@ class FLUXPipeline:
         logger.info(f"FLUX.1-dev Pipeline initialized")
         logger.info(f"Model: {self.model_name}")
         logger.info(f"Output directory: {self.output_dir}")
+        logger.info(
+            f"TensorFlow forced to CPU mode (CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', 'not set')})"
+        )
 
     def load_prompts(self, prompts_file: str) -> list:
         """Load prompts from CSV file."""
@@ -114,10 +122,64 @@ class FLUXPipeline:
         logger.info(f"Generation metadata saved to {metadata_path}")
         return metadata
 
+    def cleanup_gpu_memory(self):
+        """Thoroughly cleanup GPU memory after image generation."""
+        logger.info("Cleaning up GPU memory before classification...")
+
+        # Delete the image generator
+        if self.image_generator is not None:
+            del self.image_generator
+            self.image_generator = None
+            logger.info("Deleted image generator")
+
+        # Clear PyTorch GPU cache if using CUDA
+        if self.device == "cuda" or (
+            self.device == "auto" and self._is_cuda_available()
+        ):
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    # Comprehensive GPU cleanup
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize()
+                    torch.cuda.ipc_collect()
+                    logger.info("Cleared PyTorch GPU cache and synchronized")
+            except Exception as e:
+                logger.warning(f"Error during PyTorch GPU cleanup: {e}")
+
+        # Force garbage collection
+        import gc
+
+        gc.collect()
+        logger.info("Forced garbage collection")
+
+        # Small delay to ensure GPU state is clean
+        time.sleep(1)
+        logger.info("GPU memory cleanup complete")
+
+    def _is_cuda_available(self) -> bool:
+        """Check if CUDA is available."""
+        try:
+            import torch
+
+            return torch.cuda.is_available()
+        except:
+            return False
+
     def classify_demographics(self, model_path: str = None) -> Dict[str, Any]:
-        """Classify demographics in generated images."""
-        logger.info("Initializing demographic classifier")
-        self.classifier = FairFaceClassifier(model_path=model_path, device=self.device)
+        """Classify demographics in generated images using CPU."""
+        logger.info("=" * 60)
+        logger.info("Initializing demographic classifier (CPU-ONLY MODE)")
+        logger.info("Note: Classification will run on CPU to avoid GPU conflicts")
+        logger.info("=" * 60)
+
+        # Double-check TensorFlow environment variables
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
+
+        # Force CPU device for classifier
+        self.classifier = FairFaceClassifier(model_path=model_path, device="cpu")
 
         # Get list of generated images
         image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff"}
@@ -133,6 +195,7 @@ class FLUXPipeline:
             raise ValueError(f"No images found in {self.images_dir}")
 
         logger.info(f"Classifying demographics for {len(image_paths)} images")
+        logger.info("This may take some time on CPU...")
         start_time = time.time()
 
         # Classify images
@@ -143,13 +206,27 @@ class FLUXPipeline:
 
         classification_time = time.time() - start_time
 
+        # Count successful classifications
+        successful = sum(1 for r in results if "error" not in r)
+        failed = len(results) - successful
+
         logger.info(f"Classification completed in {classification_time:.2f} seconds")
+        logger.info(
+            f"Successful: {successful}/{len(results)} ({successful/len(results)*100:.1f}%)"
+        )
+        if failed > 0:
+            logger.warning(
+                f"Failed: {failed}/{len(results)} ({failed/len(results)*100:.1f}%)"
+            )
 
         # Save classification metadata
         metadata = {
             "model_path": model_path,
-            "device": self.device,
+            "device": "cpu",  # Always CPU
             "num_images": len(image_paths),
+            "successful_classifications": successful,
+            "failed_classifications": failed,
+            "success_rate": successful / len(results) if results else 0,
             "classification_time": classification_time,
             "results": results,
         }
@@ -177,15 +254,38 @@ class FLUXPipeline:
         with open(results_path, "r") as f:
             results = json.load(f)
 
+        # Filter out failed classifications
+        successful_results = [r for r in results if "error" not in r]
+        failed_count = len(results) - len(successful_results)
+
+        if failed_count > 0:
+            logger.warning(
+                f"Excluding {failed_count} failed classifications from analysis"
+            )
+
+        if not successful_results:
+            logger.error("No successful classifications to analyze!")
+            return {
+                "error": "No successful classifications",
+                "metadata": {
+                    "num_samples": 0,
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "model_name": self.model_name,
+                },
+            }
+
+        logger.info(f"Analyzing {len(successful_results)} successful classifications")
+
         # Perform comprehensive analysis
         start_time = time.time()
-        analysis = self.analyzer.comprehensive_analysis(results)
+        analysis = self.analyzer.comprehensive_analysis(successful_results)
         analysis_time = time.time() - start_time
 
         # Add metadata
         analysis["metadata"] = {
             "analysis_time": analysis_time,
-            "num_samples": len(results),
+            "num_samples": len(successful_results),
+            "num_failed": failed_count,
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "model_name": self.model_name,
         }
@@ -239,8 +339,28 @@ class FLUXPipeline:
             f"Analysis Time: {metadata.get('analysis_time', 'N/A'):.2f} seconds"
         )
         report_lines.append(f"Number of Samples: {metadata.get('num_samples', 'N/A')}")
+        if metadata.get("num_failed", 0) > 0:
+            report_lines.append(
+                f"Failed Classifications: {metadata.get('num_failed', 0)}"
+            )
         report_lines.append(f"Timestamp: {metadata.get('timestamp', 'N/A')}")
         report_lines.append("")
+
+        # Check if analysis has error
+        if "error" in analysis:
+            report_lines.append("ERROR:")
+            report_lines.append("-" * 40)
+            report_lines.append(f"Analysis failed: {analysis['error']}")
+            report_lines.append("")
+            report_lines.append("=" * 80)
+
+            report_content = "\n".join(report_lines)
+            report_path = self.analysis_dir / "comprehensive_report.txt"
+            with open(report_path, "w") as f:
+                f.write(report_content)
+
+            logger.warning(f"Report saved to {report_path} (with errors)")
+            return str(report_path)
 
         # Race bias analysis
         race_bias = analysis.get("race_bias", {})
@@ -316,6 +436,7 @@ class FLUXPipeline:
         logger.info("=" * 80)
         logger.info(f"Output directory: {self.output_dir}")
         logger.info(f"Model: {self.model_name}")
+        logger.info(f"Classification: CPU-only mode (to avoid GPU conflicts)")
         logger.info("=" * 80)
 
         start_time = time.time()
@@ -331,24 +452,12 @@ class FLUXPipeline:
                 prompts_data, num_images_per_prompt
             )
 
+            # Step 2.5: Cleanup GPU memory
+            logger.info("\n[Step 2.5/6] Cleaning up GPU memory...")
+            self.cleanup_gpu_memory()
+
             # Step 3: Classify demographics
             logger.info("\n[Step 3/6] Classifying demographics...")
-
-            # Clear PyTorch GPU memory before TensorFlow classification
-            if self.device == "cuda":
-                import torch
-
-                torch.cuda.empty_cache()
-                logger.info("Cleared PyTorch GPU cache")
-
-            # Force TensorFlow to use CPU to avoid GPU conflicts
-            import os
-
-            os.environ["CUDA_VISIBLE_DEVICES"] = ""
-            logger.info(
-                "Set classification to use CPU (avoiding TensorFlow/PyTorch GPU conflict)"
-            )
-
             classification_metadata = self.classify_demographics(classifier_model_path)
 
             # Step 4: Analyze bias
@@ -384,6 +493,9 @@ class FLUXPipeline:
             logger.info(f"Total time: {total_time:.2f} seconds")
             logger.info(f"Output directory: {self.output_dir}")
             logger.info(f"Generated images: {generation_metadata['total_images']}")
+            logger.info(
+                f"Successful classifications: {classification_metadata.get('successful_classifications', 0)}"
+            )
             logger.info(f"Analysis plots: {len(plots)}")
             logger.info(f"Report: {report_path}")
             logger.info("=" * 80)
@@ -422,6 +534,9 @@ Examples:
 
   # Use custom prompts file
   python m2_FLUX.py --prompts custom_prompts.csv
+
+Note: Classification always runs on CPU to avoid GPU conflicts between
+      PyTorch (image generation) and TensorFlow (classification).
         """,
     )
     parser.add_argument(
@@ -438,7 +553,7 @@ Examples:
     parser.add_argument(
         "--device",
         default="auto",
-        help="Device to use (auto, cpu, cuda, mps) (default: auto)",
+        help="Device for image generation (auto, cpu, cuda, mps) (default: auto)",
     )
     parser.add_argument(
         "--classifier-model", help="Path to pre-trained classifier model (optional)"
@@ -478,6 +593,9 @@ Examples:
         print(f"Total time: {results['total_time']:.2f} seconds")
         print(f"Output directory: {results['output_directory']}")
         print(f"Generated images: {results['generation_metadata']['total_images']}")
+        print(
+            f"Successful classifications: {results['classification_metadata'].get('successful_classifications', 0)}"
+        )
         print(f"Analysis plots: {len(results['plots'])}")
         print(f"Report: {results['report_path']}")
         print("\nAll results saved to:", results["output_directory"])
