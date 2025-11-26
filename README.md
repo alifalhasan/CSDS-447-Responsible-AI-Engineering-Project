@@ -165,6 +165,7 @@ We report ΔSPD and ΔBiasAmp between base vs mitigated prompts for quantitative
 ## 9. Conclusion
 
 The Stable Diffusion v1.5 baseline demonstrates clear demographic bias in generating negative-role depictions, especially along race and gender lines.  
+The Flux is used as 2nd model to generate images and check for the bias.  
 Mitigation experiments (prompt rewrites, diversity cues, rebalancing) are expected to reduce SPD and BiasAmp without model retraining.
 
 This work underscores the necessity of **responsible prompt engineering** and **transparent evaluation** in generative fairness research.
