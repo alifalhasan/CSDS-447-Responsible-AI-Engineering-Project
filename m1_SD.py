@@ -5,7 +5,7 @@ Model 1: Stable Diffusion (SD) Pipeline for Negative Role Fairness Analysis
 This script runs the complete pipeline for analyzing bias in Stable Diffusion
 text-to-image model when generating images of negative social roles.
 
-All results are saved to m1_SD_result/ directory.
+All results are saved to m1_SD_result_nov20/ directory.
 
 Usage:
     python m1_SD.py --num-images 3 --device auto
@@ -39,12 +39,12 @@ logger = logging.getLogger(__name__)
 class StableDiffusionPipeline:
     """Complete pipeline for Stable Diffusion negative role fairness analysis."""
     
-    def __init__(self, output_dir: str = "m1_SD_result", device: str = "auto"):
+    def __init__(self, output_dir: str = "m1_SD_result_nov20", device: str = "auto"):
         """
         Initialize the pipeline.
         
         Args:
-            output_dir: Directory to save all results (default: m1_SD_result)
+            output_dir: Directory to save all results (default: m1_SD_result_nov20)
             device: Device to use for computation
         """
         self.output_dir = Path(output_dir)
@@ -398,16 +398,16 @@ Examples:
   python m1_SD.py --prompts custom_prompts.csv
         """
     )
-    parser.add_argument("--prompts", default="negative_role_prompts_all.csv",
-                       help="Path to prompts CSV file (default: negative_role_prompts_all.csv)")
+    parser.add_argument("--prompts", default="negative_role_prompts_merged_clean_frontview.csv",
+                       help="Path to prompts CSV file (default: negative_role_prompts_merged_clean_frontview.csv)")
     parser.add_argument("--num-images", type=int, default=3,
                        help="Number of images per prompt (default: 3)")
     parser.add_argument("--device", default="auto",
                        help="Device to use (auto, cpu, cuda, mps) (default: auto)")
     parser.add_argument("--classifier-model", 
                        help="Path to pre-trained classifier model (optional)")
-    parser.add_argument("--output", default="m1_SD_result",
-                       help="Output directory for results (default: m1_SD_result)")
+    parser.add_argument("--output", default="m1_SD_result_nov20",
+                       help="Output directory for results (default: m1_SD_result_nov20)")
     
     args = parser.parse_args()
     

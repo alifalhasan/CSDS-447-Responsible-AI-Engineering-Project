@@ -211,5 +211,6 @@ __marimo__/
 
 model_1_demo/demo_results/*
 m1_SD_result/generated_images/*
+m1_SD_result_nov20/generated_images/*
 
 !447_env/requirements.txt
