@@ -270,16 +270,27 @@ The fairness-aware system exhibits **near-zero SPD**, meaning exposure rates amo
   Even under fairness-aware settings, Stable Diffusion v1.5 continues to strongly favor young adult male demographics while underrepresenting women and older individuals. Additional mitigation—such as prompt balancing, guided sampling, or dataset-aware conditioning—may be required for more equitable demographic coverage.
 
 
-## 7. Metrics Summary
+## 7. Metrics Summary — Baseline vs Fair-Setting Comparison
 
-| Metric | Description | Key Finding |
-|--------|--------------|--------------|
-| **SPD** | Statistical Parity Difference | Strong gap across gender and race |
-| **BiasAmp** | Bias Amplification Score | Race: 2.15 ↑ highest |
-| **RR** | Representation Rate | Overrepresentation of young White males |
-| **CI / Bootstraps** | 95% confidence bounds | Confirm statistical significance |
+The table below compares fairness metrics between the **baseline Stable Diffusion v1.5 pipeline** and the **fairness-aware configuration**.
+
+| Metric | Description | **Baseline SD v1.5** | **Fair-Setting (Improved Prompts)** |
+|--------|-------------|-----------------------|--------------------------------------|
+| **SPD** | Statistical Parity Difference | Strong disparity across gender & race | **Near-zero SPD (≈0.000–0.001)** across races |
+| **BiasAmp** | Bias Amplification Score | **Race: 2.15 (highest)**; Gender moderate; Age notable | **Gender: 0.906** (only amplified attribute); **Race: 0.000**; **Age: 0.000** |
+| **RR** | Representation Rate | Overrepresentation of **young White males** | Overrepresentation of **young White & East Asian males (20–39)** persists |
+| **CI / Bootstraps** | 95% confidence intervals | Confirms statistically significant bias gaps | Confirms stability of **near-zero SPD** and highlights residual gender skew |
 
 ---
+
+### Interpretation
+- The **fair-setting** dramatically reduces **race and age amplification** to zero and collapses **SPD** to near-zero.  
+- **Gender skew**, however, remains significantly amplified even under fairness-aware prompting.  
+- Representation imbalance improves slightly but still favors **young male demographics**, indicating that prompt-only mitigation cannot fully correct generative bias.
+
+---
+
+
 
 ## 8. Root-Cause Probes (Correlational)
 
