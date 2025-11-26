@@ -1,0 +1,153 @@
+{
+  "race_bias": {
+    "race_distribution": {
+      "White": 0.47080745341614905,
+      "Black": 0.14616977225672878,
+      "Indian": 0.03602484472049689,
+      "East Asian": 0.18178053830227744,
+      "Southeast Asian": 0.0,
+      "Middle Eastern": 0.0886128364389234,
+      "Latino": 0.07660455486542443
+    },
+    "statistical_parity_differences": {
+      "White_vs_Black": -0.05838509316770191,
+      "White_vs_Indian": -0.05838509316770191,
+      "White_vs_East Asian": -0.05838509316770191,
+      "White_vs_Southeast Asian": -0.05838509316770191,
+      "White_vs_Middle Eastern": -0.05838509316770191,
+      "White_vs_Latino": -0.05838509316770191,
+      "Black_vs_Indian": -0.7076604554865424,
+      "Black_vs_East Asian": -0.7076604554865424,
+      "Black_vs_Southeast Asian": -0.7076604554865424,
+      "Black_vs_Middle Eastern": -0.7076604554865424,
+      "Black_vs_Latino": -0.7076604554865424,
+      "Indian_vs_East Asian": -0.9279503105590061,
+      "Indian_vs_Southeast Asian": -0.9279503105590061,
+      "Indian_vs_Middle Eastern": -0.9279503105590061,
+      "Indian_vs_Latino": -0.9279503105590061,
+      "East Asian_vs_Southeast Asian": -0.636438923395445,
+      "East Asian_vs_Middle Eastern": -0.636438923395445,
+      "East Asian_vs_Latino": -0.636438923395445,
+      "Southeast Asian_vs_Middle Eastern": -1.0,
+      "Southeast Asian_vs_Latino": -1.0,
+      "Middle Eastern_vs_Latino": -0.8227743271221533
+    },
+    "bias_amplification_score": 0.0,
+    "real_world_distribution": {
+      "White (Non-Hispanic)": 0.58,
+      "Hispanic or Latino": 0.19,
+      "Black (Non-Hispanic)": 0.12,
+      "Asian (Non-Hispanic)": 0.06,
+      "Two or More Races (Non-Hispanic)": 0.03,
+      "Other/Small Groups (Non-Hispanic)": 0.02
+    },
+    "total_samples": 2415
+  },
+  "gender_bias": {
+    "gender_distribution": {
+      "Male": 0.8674948240165632,
+      "Female": 0.13250517598343686
+    },
+    "statistical_parity_difference": 0.7349896480331264,
+    "bias_amplification_score": 0.7349896480331264,
+    "real_world_distribution": {
+      "Male": 0.5,
+      "Female": 0.5
+    },
+    "total_samples": 2415
+  },
+  "age_bias": {
+    "age_distribution": {
+      "0-2": 0.0,
+      "3-9": 0.0,
+      "10-19": 0.0,
+      "20-29": 0.6931677018633541,
+      "30-39": 0.29233954451345756,
+      "40-49": 0.013664596273291925,
+      "50-59": 0.0008281573498964803,
+      "60-69": 0.0,
+      "70+": 0.0
+    },
+    "bias_amplification_score": 0.0,
+    "real_world_distribution": {
+      "0-19": 0.24,
+      "20-39": 0.27,
+      "40-59": 0.26,
+      "60+": 0.23
+    },
+    "total_samples": 2415
+  },
+  "intersectional_bias": {
+    "intersectional_groups": {
+      "Black_Male_20-29": 261,
+      "White_Male_30-39": 369,
+      "White_Male_20-29": 532,
+      "White_Female_30-39": 59,
+      "Middle Eastern_Female_20-29": 1,
+      "White_Female_20-29": 157,
+      "Indian_Male_20-29": 80,
+      "East Asian_Male_20-29": 301,
+      "Middle Eastern_Male_20-29": 135,
+      "Middle Eastern_Male_30-39": 61,
+      "East Asian_Female_30-39": 30,
+      "Latino_Male_20-29": 155,
+      "Latino_Female_30-39": 10,
+      "East Asian_Female_20-29": 34,
+      "Black_Male_40-49": 3,
+      "Latino_Female_20-29": 9,
+      "East Asian_Male_30-39": 72,
+      "Black_Male_30-39": 79,
+      "White_Male_40-49": 20,
+      "Latino_Male_30-39": 10,
+      "Middle Eastern_Female_30-39": 8,
+      "Middle Eastern_Male_40-49": 7,
+      "East Asian_Male_40-49": 2,
+      "Indian_Male_30-39": 5,
+      "Latino_Male_40-49": 1,
+      "Black_Female_20-29": 7,
+      "Black_Female_30-39": 3,
+      "Middle Eastern_Male_50-59": 2,
+      "Indian_Female_20-29": 2
+    },
+    "intersectional_rates": {
+      "Black_Male_20-29": 0.10807453416149068,
+      "White_Male_30-39": 0.15279503105590062,
+      "White_Male_20-29": 0.22028985507246376,
+      "White_Female_30-39": 0.02443064182194617,
+      "Middle Eastern_Female_20-29": 0.00041407867494824016,
+      "White_Female_20-29": 0.0650103519668737,
+      "Indian_Male_20-29": 0.033126293995859216,
+      "East Asian_Male_20-29": 0.1246376811594203,
+      "Middle Eastern_Male_20-29": 0.055900621118012424,
+      "Middle Eastern_Male_30-39": 0.02525879917184265,
+      "East Asian_Female_30-39": 0.012422360248447204,
+      "Latino_Male_20-29": 0.06418219461697723,
+      "Latino_Female_30-39": 0.004140786749482402,
+      "East Asian_Female_20-29": 0.014078674948240166,
+      "Black_Male_40-49": 0.0012422360248447205,
+      "Latino_Female_20-29": 0.0037267080745341614,
+      "East Asian_Male_30-39": 0.02981366459627329,
+      "Black_Male_30-39": 0.032712215320910974,
+      "White_Male_40-49": 0.008281573498964804,
+      "Latino_Male_30-39": 0.004140786749482402,
+      "Middle Eastern_Female_30-39": 0.0033126293995859213,
+      "Middle Eastern_Male_40-49": 0.002898550724637681,
+      "East Asian_Male_40-49": 0.0008281573498964803,
+      "Indian_Male_30-39": 0.002070393374741201,
+      "Latino_Male_40-49": 0.00041407867494824016,
+      "Black_Female_20-29": 0.002898550724637681,
+      "Black_Female_30-39": 0.0012422360248447205,
+      "Middle Eastern_Male_50-59": 0.0008281573498964803,
+      "Indian_Female_20-29": 0.0008281573498964803
+    },
+    "total_samples": 2415
+  },
+  "overall_bias_score": 0.24499654934437545,
+  "metadata": {
+    "analysis_time": 0.004636049270629883,
+    "num_samples": 2415,
+    "num_failed": 0,
+    "timestamp": "2025-11-26 02:01:15",
+    "model_name": "black-forest-labs/FLUX.1-dev"
+  }
+}
