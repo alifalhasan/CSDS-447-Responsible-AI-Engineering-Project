@@ -624,9 +624,42 @@ The table below compares fairness metrics between the **baseline Flux pipeline**
 
 ---
 
+## A. Stable Diffusion vs Flux — Baseline Comparison
+
+| Metric | Description | **Stable Diffusion v1.5 (Baseline)** | **Flux (Baseline)** |
+|--------|-------------|----------------------------------------|-----------------------|
+| **SPD** | Statistical Parity Difference | Strong SPD gaps across gender & race | Near-zero SPD (≈0.000–0.001) |
+| **BiasAmp** | Bias Amplification Score | **Race: 2.15** (highest); Gender moderate; Age notable | **Gender: 0.906** (only amplified attribute); Race: 0.000; Age: 0.000 |
+| **RR** | Representation Rate | Dominated by **young White males**; females nearly absent | Dominated by **young White & East Asian males**; females ~4.7% |
+| **CI / Bootstraps** | Statistical confidence | Confirms severe demographic skew | Confirms stable near-zero SPD but large gender skew |
+
+---
+
+## B. Stable Diffusion vs Flux — Fair-Setting Comparison
+
+| Metric | Description | **Stable Diffusion v1.5 (Fair-Setting)** | **Flux (Fair-Setting)** |
+|--------|-------------|--------------------------------------------|---------------------------|
+| **SPD** | Statistical Parity Difference | Near-zero SPD across races | Near-zero SPD (≈−0.058), balanced |
+| **BiasAmp** | Bias Amplification Score | **Gender: 0.906**; Race: 0.000; Age: 0.000 | **Gender: 0.735** (reduced); Race: 0.000; Age: 0.000 |
+| **RR** | Representation Rate | Still dominated by **young White males**; older adults absent | Dominated by **young male groups**; females rise to **13.3%** |
+| **CI / Bootstraps** | 95% confidence | Confirms near-zero SPD; gender skew persists | Confirms reduced gender amplification and stable SPD |
+
+---
+
+## C. Discussion & Insights
+
+- **Flux shows substantially less racial bias than Stable Diffusion**, both in baseline and fair-setting configurations.  
+- After applying fairness-aware prompting, **Stable Diffusion collapses race/age amplification to zero** but still retains **strong gender amplification** (0.906).  
+- Flux further **reduces gender amplification** (0.906 → 0.735) in the fair-setting, showing improved sensitivity to balanced prompting strategies.  
+- Both models continue to **overproduce young adult male faces**, indicating a shared underlying bias from training data distributions.  
+- Despite improvements, **prompt-level fairness methods cannot fully undo demographic imbalance**, suggesting the need for deeper mitigation (conditioning, fine-tuning, or dataset-aware re-weighting).  
+- Flux demonstrates **higher demographic stability and lower unintended amplification**, making it more responsive to fairness-aware configurations compared to Stable Diffusion v1.5.
+
+---
 
 
-## 8. Root-Cause Probes (Correlational)
+
+## 11. Root-Cause Probes (Correlational)
 
 1. **Token–demographic correlation:** “criminal”, “terrorist” strongly co-occur with masculine-coded words.  
 2. **Cross-attention inspection:** High weight concentration on “man/male” tokens.  
@@ -635,7 +668,7 @@ The table below compares fairness metrics between the **baseline Flux pipeline**
 
 ---
 
-## 9. Ethics, Safety, and Data Handling
+## 12. Ethics, Safety, and Data Handling
 
 - Sensitive content handled with anonymization and redaction.  
 - No identifiable faces shared publicly.  
@@ -643,7 +676,7 @@ The table below compares fairness metrics between the **baseline Flux pipeline**
 
 ---
 
-## 10. Conclusion
+## 13. Conclusion
 
 The Stable Diffusion v1.5 baseline demonstrates clear demographic bias in generating negative-role depictions, especially along race and gender lines.  
 The Flux is used as 2nd model to generate images and check for the bias.  
@@ -653,6 +686,6 @@ This work underscores the necessity of **responsible prompt engineering** and **
 
 ---
 
-## 11. License
+## 14. License
 
 MIT License © 2025 Towsif Raiyan, Jitong Zou, Alif Al Hasan
