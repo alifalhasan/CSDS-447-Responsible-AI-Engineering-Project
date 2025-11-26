@@ -9,11 +9,6 @@ import time
 from typing import Dict, Any
 import numpy as np
 
-# Set TensorFlow to CPU-only
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Reduce TensorFlow logging
-
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
@@ -60,9 +55,6 @@ class FLUXPipeline:
         logger.info(f"FLUX.1-dev Pipeline initialized")
         logger.info(f"Model: {self.model_name}")
         logger.info(f"Output directory: {self.output_dir}")
-        logger.info(
-            f"TensorFlow forced to CPU mode (CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', 'not set')})"
-        )
 
     def load_prompts(self, prompts_file: str) -> list:
         """Load prompts from CSV file."""
@@ -123,14 +115,15 @@ class FLUXPipeline:
         return metadata
 
     def cleanup_gpu_memory(self):
-        """Thoroughly cleanup GPU memory after image generation."""
+        logger.info("=" * 60)
         logger.info("Cleaning up GPU memory before classification...")
+        logger.info("=" * 60)
 
         # Delete the image generator
         if self.image_generator is not None:
             del self.image_generator
             self.image_generator = None
-            logger.info("Deleted image generator")
+            logger.info("✓ Deleted image generator")
 
         # Clear PyTorch GPU cache if using CUDA
         if self.device == "cuda" or (
@@ -144,7 +137,7 @@ class FLUXPipeline:
                     torch.cuda.empty_cache()
                     torch.cuda.synchronize()
                     torch.cuda.ipc_collect()
-                    logger.info("Cleared PyTorch GPU cache and synchronized")
+                    logger.info("✓ Cleared PyTorch GPU cache and synchronized")
             except Exception as e:
                 logger.warning(f"Error during PyTorch GPU cleanup: {e}")
 
@@ -152,11 +145,18 @@ class FLUXPipeline:
         import gc
 
         gc.collect()
-        logger.info("Forced garbage collection")
+        logger.info("✓ Forced garbage collection")
+
+        # Set TensorFlow to CPU-only mode
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+        logger.info("✓ Set TensorFlow to CPU-only mode (CUDA_VISIBLE_DEVICES=-1)")
 
         # Small delay to ensure GPU state is clean
-        time.sleep(1)
-        logger.info("GPU memory cleanup complete")
+        time.sleep(2)
+        logger.info("✓ GPU memory cleanup complete")
+        logger.info("=" * 60)
 
     def _is_cuda_available(self) -> bool:
         """Check if CUDA is available."""
