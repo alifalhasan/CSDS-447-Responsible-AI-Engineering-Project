@@ -603,6 +603,26 @@ The fairness-aware pipeline **reduces SPD dramatically**, achieving values near 
 - **Takeaway**  
   The fairness-aware configuration improves several metrics (lower gender bias amplification, balanced SPD), but Flux still strongly favors young adult male demographics. Further debiasing—such as prompt balancing, guided sampling, or class-conditional constraints—may be needed.
 
+## 10. Metrics Summary — Flux Baseline vs Fair-Setting Comparison
+
+The table below compares fairness metrics between the **baseline Flux pipeline** and the **fairness-aware Flux configuration**.
+
+| Metric | Description | **Baseline Flux** | **Fair-Setting (Improved Prompts)** |
+|--------|-------------|--------------------|--------------------------------------|
+| **SPD** | Statistical Parity Difference | Near-zero SPD (≈0.000–0.001) across all races | Slight negative SPD (≈−0.058), still near-zero and balanced |
+| **BiasAmp** | Bias Amplification Score | **Gender: 0.906** (only amplified attribute); Race: 0.000; Age: 0.000 | **Gender: 0.735** (reduced); Race: 0.000; Age: 0.000 |
+| **RR** | Representation Rate | Strong overrepresentation of **young White & East Asian males (20–39)** | Overrepresentation persists, but slight increase in female (13.3%) and minority representation |
+| **CI / Bootstraps** | 95% confidence intervals | Confirms stability of near-zero SPD; identifies strong male demographic skew | Confirms reduced gender bias amplification and stable SPD; remaining skew in young adult males |
+
+---
+
+### Interpretation
+- The **fair-setting** reduces **gender bias amplification** (0.906 → 0.735) while keeping **race and age amplification at zero**.  
+- SPD remains **near-zero** in both settings, with minor negative values indicating balanced racial exposure in the fair configuration.  
+- Representation imbalance **improves slightly** (female share rises from 4.7% → 13.3%), but the model still strongly favors **young adult male demographics**.  
+- As with Stable Diffusion, **prompt-only mitigation cannot fully equalize demographic representation**, though Flux shows measurable fairness gains.
+
+---
 
 
 
