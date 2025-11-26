@@ -1,0 +1,21 @@
+{
+  "race_distribution": {
+    "Black": 0.21,
+    "White": 0.31,
+    "Latino": 0.09,
+    "East Asian": 0.11,
+    "Middle Eastern": 0.06,
+    "Southeast Asian": 0.09,
+    "Indian": 0.13
+  },
+  "gender_distribution": {
+    "Female": 0.28,
+    "Male": 0.72
+  },
+  "total_samples": 100,
+  "bias_analysis": {
+    "race_bias_detected": false,
+    "gender_bias_detected": true,
+    "overall_bias_score": 0.53
+  }
+}

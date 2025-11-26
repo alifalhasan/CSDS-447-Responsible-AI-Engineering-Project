@@ -1,0 +1,31 @@
+
+CSDS 447 DEMO-1 RESULTS REPORT
+==============================
+
+Analysis Summary:
+- Total images analyzed: 100
+- Race bias detected: False
+- Gender bias detected: True
+- Overall bias score: 0.530
+
+Race Distribution:
+{
+  "Black": 0.21,
+  "White": 0.31,
+  "Latino": 0.09,
+  "East Asian": 0.11,
+  "Middle Eastern": 0.06,
+  "Southeast Asian": 0.09,
+  "Indian": 0.13
+}
+
+Gender Distribution:
+{
+  "Female": 0.28,
+  "Male": 0.72
+}
+
+Files Generated:
+- Images: 100 in demo_results/generated_images/
+- Analysis: demo_results/analysis/bias_analysis.json
+- Visualizations: demo_results/figures/
