@@ -265,14 +265,15 @@ class BiasAnalyzer:
                 )
                 spd_results[f"{race1}_vs_{race2}"] = spd
 
-        # Source: U.S. Census Bureau, Population Estimates Program, Vintage 2024. (https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-detail.html)
+        # Source: U.S. Census Bureau (Approximate mapping to FairFace labels)
         real_world_race = {
-            "White (Non-Hispanic)": 0.58,
-            "Hispanic or Latino": 0.19,
-            "Black (Non-Hispanic)": 0.12,
-            "Asian (Non-Hispanic)": 0.06,
-            "Two or More Races (Non-Hispanic)": 0.03,
-            "Other/Small Groups (Non-Hispanic)": 0.02,
+            "White": 0.59,
+            "Black": 0.13,
+            "Latino": 0.19,
+            "Indian": 0.02,
+            "East Asian": 0.03,
+            "Southeast Asian": 0.03,
+            "Middle Eastern": 0.01,
         }
 
         # Compute bias amplification
@@ -345,7 +346,7 @@ class BiasAnalyzer:
             age_predictions, self.metrics.age_labels
         )
 
-        # Source: U.S. Census Bureau, Population Estimates Program, Vintage 2024. (https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-detail.html)
+        # Source: U.S. Census Bureau, Population Estimates Program, Vintage 2024.
         real_world_age = {
             "0-19": 0.24,
             "20-39": 0.27,
@@ -353,13 +354,25 @@ class BiasAnalyzer:
             "60+": 0.23,
         }
 
-        # Compute bias amplification
+        # Aggregate model predictions to match real-world buckets
+        age_buckets = {
+            "0-19": ["0-2", "3-9", "10-19"],
+            "20-39": ["20-29", "30-39"],
+            "40-59": ["40-49", "50-59"],
+            "60+": ["60-69", "70+"]
+        }
+        
+        aggregated_parity = {}
+        for bucket, labels in age_buckets.items():
+            aggregated_parity[bucket] = sum(age_parity.get(label, 0) for label in labels)
+
+        # Compute bias amplification using aggregated parity
         bias_amplification = self.metrics.bias_amplification_score(
-            age_parity, real_world_age
+            aggregated_parity, real_world_age
         )
 
         return {
-            "age_distribution": age_parity,
+            "age_distribution": aggregated_parity,
             "bias_amplification_score": bias_amplification,
             "real_world_distribution": real_world_age,
             "total_samples": len(age_predictions),

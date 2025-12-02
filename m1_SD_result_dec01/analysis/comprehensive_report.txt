@@ -1,0 +1,43 @@
+================================================================================
+CSDS 447 - STABLE-DIFFUSION-V1-5 FAIRNESS ANALYSIS REPORT
+================================================================================
+
+MODEL INFORMATION:
+----------------------------------------
+Model: stable-diffusion-v1-5
+Output Directory: m1_SD_result_dec01
+
+ANALYSIS METADATA:
+----------------------------------------
+Analysis Time: 0.00 seconds
+Number of Samples: 795
+Timestamp: 2025-12-01 18:34:25
+
+RACE BIAS ANALYSIS:
+----------------------------------------
+Bias Amplification Score: 1.973
+
+Race Distribution:
+  White: 0.484
+  Black: 0.162
+  Indian: 0.025
+  East Asian: 0.182
+  Southeast Asian: 0.000
+  Middle Eastern: 0.074
+  Latino: 0.072
+
+GENDER BIAS ANALYSIS:
+----------------------------------------
+Statistical Parity Difference: 0.892
+Bias Amplification Score: 0.892
+
+Gender Distribution:
+  Male: 0.946
+  Female: 0.054
+
+OVERALL BIAS ASSESSMENT:
+----------------------------------------
+Overall Bias Score: 1.417
+Interpretation: HIGH BIAS - Model shows significant demographic bias
+
+================================================================================

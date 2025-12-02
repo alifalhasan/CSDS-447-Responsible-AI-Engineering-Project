@@ -7,6 +7,9 @@ demographic analysis to detect bias in generated images.
 """
 
 import os
+# Set environment variable to fix Keras 3 compatibility with DeepFace
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
 import json
 import argparse
 import logging
@@ -214,12 +217,36 @@ class FairFaceClassifier:
             
             try:
                 # DeepFace analyzes the image
-                result = DeepFace.analyze(
-                    img_path=temp_path,
-                    actions=['age', 'gender', 'race'],
-                    enforce_detection=False,
-                    silent=True
-                )
+                # Use opencv as default as it's most stable and doesn't use TF
+                backends = ['opencv', 'ssd', 'dlib', 'mtcnn', 'retinaface']
+                backend = 'opencv'
+                
+                # Try to find a better backend if available and safe
+                # But given the Keras errors, we'll stick to opencv or ssd if possible
+                # unless user explicitly wants others. For now, let's try opencv first.
+                
+                try:
+                    result = DeepFace.analyze(
+                        img_path=temp_path,
+                        actions=['age', 'gender', 'race'],
+                        detector_backend=backend,
+                        enforce_detection=False,
+                        silent=True
+                    )
+                except Exception as e:
+                    # If opencv fails, try ssd
+                    logger.warning(f"DeepFace with opencv failed: {e}. Trying ssd.")
+                    try:
+                        result = DeepFace.analyze(
+                            img_path=temp_path,
+                            actions=['age', 'gender', 'race'],
+                            detector_backend='ssd',
+                            enforce_detection=False,
+                            silent=True
+                        )
+                    except Exception as e2:
+                        logger.error(f"DeepFace with ssd failed: {e2}")
+                        raise e
             finally:
                 # Clean up temp file
                 try:
@@ -229,7 +256,15 @@ class FairFaceClassifier:
             
             # Handle both single dict and list responses
             if isinstance(result, list):
-                result = result[0]
+                # Find the largest face if multiple are detected
+                if len(result) > 1:
+                    # DeepFace result usually contains 'region' key with {'x', 'y', 'w', 'h'}
+                    try:
+                        result = max(result, key=lambda x: x.get('region', {}).get('w', 0) * x.get('region', {}).get('h', 0))
+                    except:
+                        result = result[0]
+                else:
+                    result = result[0]
             
             # Map DeepFace outputs to our labels
             race_mapping = {
@@ -239,6 +274,7 @@ class FairFaceClassifier:
                 'indian': 'Indian',
                 'middle eastern': 'Middle Eastern',
                 'latino hispanic': 'Latino',
+                'hispanic': 'Latino',
                 'southeast asian': 'Southeast Asian'
             }
             
