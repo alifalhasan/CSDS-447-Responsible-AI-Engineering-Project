@@ -70,7 +70,8 @@ project_root/
 ├── m2_FLUX.py           # Flux (baseline)
 ├── m2_FLUX_fair.py      # Flux (fair-setting)
 │
-├── negative_role_prompts_all.csv   # Prompt dataset
+├── negative_role_prompts_all.csv   # Original prompt dataset
+├── negative_role_fair_prompts.csv # Fair prompts
 │
 ├── m1_SD_result/        # Outputs: SD baseline
 ├── m1_SD_fair_result/   # Outputs: SD fair-setting
@@ -166,7 +167,58 @@ Outputs are stored in:
 m2_FLUX_fair_result/
 ```
 
-All four pipelines are designed to be modular and reproducible: given the same prompts, random seeds, and GPU, they will generate comparable outputs.
+### 4.5 One-Click Script for Flux (Optional)
+
+For convenience, we also provide a **single script** (e.g., `run_flux_pipeline.sh`) that sets up caches, installs dependencies, and launches the Flux pipeline.  
+As our teammate put it:  
+
+> running this script installs all dependencies and starts the main script
+
+Example:
+
+```bash
+#!/usr/bin/env bash
+
+# Configuration
+CONDA_ENV="csds447"
+WORKDIR=~/CSDS-447
+PROMPTS_FILE="negative_role_prompts.csv"
+NUM_IMAGES=3  # Number of images per prompt
+
+# Setup scratch directories
+SCRATCH_DIR=""
+OUTPUT_SCRATCH=""
+mkdir -p "$SCRATCH_DIR"
+mkdir -p "$OUTPUT_SCRATCH"
+
+# Load conda
+source ~/miniconda3/etc/profile.d/conda.sh
+
+conda activate "$CONDA_ENV" || {
+    echo "Failed to activate conda environment"
+    exit 1
+}
+
+export HF_HOME="$SCRATCH_DIR/huggingface"
+export TRANSFORMERS_CACHE="$SCRATCH_DIR/transformers"
+export HF_DATASETS_CACHE="$SCRATCH_DIR/datasets"
+mkdir -p "$HF_HOME" "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE"
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run FLUX
+python m2_FLUX.py \
+    --prompts "$PROMPTS_FILE" \
+    --num-images $NUM_IMAGES \
+    --device cuda \
+    --output "$OUTPUT_SCRATCH/m2_FLUX_result" || {
+    echo "FLUX pipeline failed!"
+    exit 1
+}
+```
+
+Before running, set `SCRATCH_DIR`, `OUTPUT_SCRATCH`, and `PROMPTS_FILE` to paths that make sense on your machine or cluster.
 
 ---
 
@@ -216,7 +268,7 @@ If you add new models or variants, we recommend following the same directory str
 
 - **GPU**:  
   - Minimum: NVIDIA GPU with **12 GB VRAM** (e.g., RTX 3060/3080).  
-  - Recommended: **24 GB VRAM** (e.g., RTX 3090, A5000, A100) for faster Flux runs and larger batches.
+  - Recommended: **30 GB VRAM** (e.g., RTX 3090, A5000, A100) for faster Flux runs and larger batches.
 
 - **CPU**: Any modern multi-core CPU is sufficient for orchestration and FairFace inference if GPU is unavailable (but slower).
 
@@ -243,11 +295,74 @@ These numbers are approximate and depend on hardware, batch size, and implementa
 
 ---
 
-## 7. Demo Notes, Iterative Improvements, and Progression
+## 7. Global Comparison Charts (World vs US vs Flux vs SD)
+
+We also provide three **high-level comparison charts** that directly contrast:
+
+- World population reference  
+- US population reference  
+- Flux model outputs  
+- Stable Diffusion v1.5 outputs  
+
+These charts live under:
+
+```text
+result-charts/
+    ├── age_bias_analysis.png
+    ├── gender_bias_analysis.png
+    └── race_bias_analysis.png
+```
+
+### 7.1 Race Distribution
+
+
+![Race Distribution: World vs US vs Flux vs SD](result-charts/race_bias_analysis.png)
+
+
+**Interpretation**
+
+- **White**: Both models (Flux and SD) are closer to **US** proportions than to the **world** reference and strongly overrepresent White individuals compared to a global baseline.  
+- **South / Southeast Asian**: Drastically underrepresented in model outputs relative to world population (big drop from ~0.34 world to ≈0.04 Flux and ≈0.02 SD).  
+- **East Asian & Middle Eastern**: Overrepresented in the models compared with US statistics.  
+- **Latino**: Underrepresented in both models, especially compared to US demographics.  
+
+Overall, race distributions show that **both models are far from world population** and even deviate from US references in systematic ways (overweighting some groups and underweighting others).
+
+### 7.2 Gender Distribution
+
+
+![Gender Distribution: World vs US vs Flux vs SD](result-charts/gender_bias_analysis.png)
+
+
+**Interpretation**
+
+- World and US references are roughly **50/50** male/female.  
+- **Flux** outputs are ~**91% male / 9% female**.  
+- **Stable Diffusion v1.5** is even more skewed at about **96% male / 4% female**.  
+
+Both models overwhelmingly portray **men** in negative-role contexts, revealing a strong **gender bias** that persists across prompts and models.
+
+### 7.3 Age Distribution
+
+
+![Age Distribution: World vs US vs Flux vs SDs](result-charts/age_bias_analysis.png)
+
+
+**Interpretation**
+
+- World and US populations are spread across **0–19**, **20–39**, **40–59**, and **60+** age groups.  
+- Both Flux and SD almost exclusively generate **20–39 year olds** (≈97–98% of all outputs).  
+- Children/teens (**0–19**) and older adults (**60+**) are effectively **absent** from the model outputs in this task.  
+
+This confirms that both models strongly associate negative roles with **young adults**, leading to a lack of age diversity in generated images.
+
+---
+
+## 8. Demo Notes, Iterative Improvements, and Progression
 
 We intentionally keep intermediate outputs to show the **progression** of the project, rather than only the final results.
 
-### 7.1 Baseline Stable Diffusion v1.5
+### 8.1 Baseline Stable Diffusion v1.5
 
 - **Observation**:  
   - Strong overrepresentation of **male** faces (≈95%).  
@@ -259,7 +374,7 @@ We intentionally keep intermediate outputs to show the **progression** of the pr
 - **Conclusion**:  
   Stable Diffusion v1.5 strongly amplifies demographic skew in negative-role depictions.
 
-### 7.2 Baseline Flux
+### 8.2 Baseline Flux
 
 - **Observation**:  
   - Also dominated by **male** faces (~91–95%).  
@@ -270,7 +385,7 @@ We intentionally keep intermediate outputs to show the **progression** of the pr
 - **Conclusion**:  
   Flux exhibits substantial gender skew but lower race and age amplification compared to SD v1.5.
 
-### 7.3 Mitigation Strategies (Prompt-Level)
+### 8.3 Mitigation Strategies (Prompt-Level)
 
 We then introduce a **mitigation arm** with three main components:
 
@@ -289,7 +404,7 @@ We apply these mitigations in the **fair-setting** scripts:
 - `m1_SD_fair.py`
 - `m2_FLUX_fair.py`
 
-### 7.4 Fair-Setting Stable Diffusion v1.5
+### 8.4 Fair-Setting Stable Diffusion v1.5
 
 - **Race & Age**:
   - Race and age **BiasAmp ≈ 0.0** under the fair-setting configuration.  
@@ -302,7 +417,7 @@ We apply these mitigations in the **fair-setting** scripts:
 - **Takeaway**:
   - Fairness-aware prompting significantly improves race and age parity for SD v1.5 but does **not** fully fix gender imbalance.
 
-### 7.5 Fair-Setting Flux
+### 8.5 Fair-Setting Flux
 
 - **Race & Age**:
   - Race and age BiasAmp remain ≈0.0.  
@@ -315,7 +430,7 @@ We apply these mitigations in the **fair-setting** scripts:
 - **Takeaway**:
   - Flux responds to fairness-aware prompting with reduced gender amplification and better representation of minority groups, but the majority of depictions are still young male faces.
 
-### 7.6 Overall Insights
+### 8.6 Overall Insights
 
 Across both models:
 
@@ -327,9 +442,9 @@ These intermediate results (baseline vs. fair-setting, SD vs. Flux) are all pres
 
 ---
 
-## 8. Summary and Limitations
+## 9. Summary and Limitations
 
-### 8.1 Summary
+### 9.1 Summary
 
 - We provide a **reproducible fairness evaluation pipeline** for negative-role T2I prompts using Stable Diffusion v1.5 and Flux.  
 - Our analysis shows:
@@ -337,7 +452,7 @@ These intermediate results (baseline vs. fair-setting, SD vs. Flux) are all pres
   - Flux has lower race and age amplification but still exhibits strong gender bias.  
   - Fairness-aware prompting can substantially reduce **race and age BiasAmp and SPD**, while **gender bias remains a challenge** for both models.  
 
-### 8.2 Limitations and Responsible-AI Considerations
+### 9.2 Limitations and Responsible-AI Considerations
 
 - Our demographic labels rely on **FairFace**, which itself has limitations and potential biases.  
 - The study focuses on **one family of prompts (negative social roles)** and may not generalize to all tasks.  
@@ -346,7 +461,7 @@ These intermediate results (baseline vs. fair-setting, SD vs. Flux) are all pres
 
 ---
 
-## 9. License
+## 10. License
 
 This project is released under the **MIT License**.
 
